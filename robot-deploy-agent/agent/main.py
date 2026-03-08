@@ -52,7 +52,7 @@ def reconcile(
     state_machine.transition(AgentState.DOWNLOADING)
     api_client.send_report("state_change", AgentState.DOWNLOADING.value)
 
-    if not pull_all_images(services):
+    if not pull_all_images(services, dry_run=config.dry_run):
         state_machine.transition(AgentState.FAILED)
         api_client.send_report(
             "state_change",
@@ -74,7 +74,7 @@ def reconcile(
 
     update_all_env_files(config.service_config_dir, services)
 
-    if not restart_all_services(service_names):
+    if not restart_all_services(service_names, dry_run=config.dry_run):
         # Rollback on restart failure
         state_machine.transition(AgentState.FAILED)
         api_client.send_report(
@@ -89,7 +89,7 @@ def reconcile(
     state_machine.transition(AgentState.VERIFYING)
     api_client.send_report("state_change", AgentState.VERIFYING.value)
 
-    if run_all_healthchecks(services):
+    if run_all_healthchecks(services, dry_run=config.dry_run):
         state_machine.transition(AgentState.SUCCEEDED)
         save_state(local_state_path, {
             "agent_state": AgentState.IDLE.value,
@@ -103,7 +103,7 @@ def reconcile(
         # Rollback on healthcheck failure
         state_machine.transition(AgentState.ROLLING_BACK)
         api_client.send_report("state_change", AgentState.ROLLING_BACK.value)
-        rollback_mgr.perform_rollback(service_names)
+        rollback_mgr.perform_rollback(service_names, dry_run=config.dry_run)
         state_machine.transition(AgentState.ROLLED_BACK)
         api_client.send_report(
             "state_change",
@@ -152,6 +152,10 @@ def main() -> None:
             reconcile(config, api_client, state_machine, config.state_file)
         except Exception:
             logger.exception("Reconciliation error")
+
+        if config.single_cycle:
+            logger.info("Single cycle mode: exiting after one reconciliation")
+            break
 
         time.sleep(config.polling_interval_sec)
 

@@ -49,7 +49,7 @@ def check_tcp(host: str, port: int, timeout: int = 5) -> bool:
         return False
 
 
-def run_healthcheck(profile: dict) -> bool:
+def run_healthcheck(profile: dict, dry_run: bool = False) -> bool:
     """Run a single health check based on a profile.
 
     Profile types:
@@ -59,11 +59,15 @@ def run_healthcheck(profile: dict) -> bool:
 
     Args:
         profile: Health check profile dict.
+        dry_run: If True, skip actual check and return True.
 
     Returns:
         True if the health check passes, False otherwise.
     """
     check_type = profile.get("type", "")
+    if dry_run:
+        logger.info("[DRY RUN] Would run healthcheck type=%s", check_type)
+        return True
     timeout_sec = profile.get("timeout_sec", 5)
     interval_sec = profile.get("interval_sec", 5)
     success_threshold = profile.get("success_threshold", 1)
@@ -103,13 +107,14 @@ def run_healthcheck(profile: dict) -> bool:
     return True
 
 
-def run_all_healthchecks(services: list[dict]) -> bool:
+def run_all_healthchecks(services: list[dict], dry_run: bool = False) -> bool:
     """Run health checks for all services that have a healthcheck profile.
 
-    Each service dict may contain a "healthcheck" key with a profile dict.
+    Each service dict may contain a "healthcheck_profile" key with a profile dict.
 
     Args:
         services: List of service dicts.
+        dry_run: If True, skip actual checks.
 
     Returns:
         True if all health checks pass, False if any fails.
@@ -117,12 +122,12 @@ def run_all_healthchecks(services: list[dict]) -> bool:
     all_ok = True
     for svc in services:
         service_name = svc.get("service_name", "unknown")
-        profile = svc.get("healthcheck")
+        profile = svc.get("healthcheck_profile")
         if profile is None:
             logger.debug("No healthcheck profile for service %s, skipping", service_name)
             continue
         logger.info("Running healthcheck for service: %s", service_name)
-        if not run_healthcheck(profile):
+        if not run_healthcheck(profile, dry_run=dry_run):
             logger.error("Healthcheck failed for service: %s", service_name)
             all_ok = False
     return all_ok

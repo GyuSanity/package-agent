@@ -1,0 +1,12 @@
+# Test configuration for local E2E testing (dry-run mode)
+control_plane_url: "http://localhost:8000"
+device_name: "test-robot-001"
+robot_model: "extreme"
+auth_key: "test-secret-key"
+polling_interval_sec: 2
+heartbeat_interval_sec: 5
+service_config_dir: "/tmp/e2e-test-configs"
+state_file: "/tmp/e2e-test-state/state.json"
+log_level: "DEBUG"
+dry_run: true
+single_cycle: true

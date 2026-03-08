@@ -6,15 +6,19 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-def pull_image(image_ref: str) -> bool:
+def pull_image(image_ref: str, dry_run: bool = False) -> bool:
     """Pull a single Docker image by reference.
 
     Args:
         image_ref: Image reference, typically in the form <repo>@<digest>.
+        dry_run: If True, skip actual pull and return True.
 
     Returns:
         True if the pull succeeded, False otherwise.
     """
+    if dry_run:
+        logger.info("[DRY RUN] Would pull image: %s", image_ref)
+        return True
     logger.info("Pulling image: %s", image_ref)
     try:
         result = subprocess.run(
@@ -42,7 +46,7 @@ def pull_image(image_ref: str) -> bool:
         return False
 
 
-def pull_all_images(services: list[dict]) -> bool:
+def pull_all_images(services: list[dict], dry_run: bool = False) -> bool:
     """Pull Docker images for all services.
 
     Each service dict must contain 'image_repo' and 'image_digest' keys.
@@ -50,6 +54,7 @@ def pull_all_images(services: list[dict]) -> bool:
 
     Args:
         services: List of service dicts with image info.
+        dry_run: If True, skip actual pulls.
 
     Returns:
         True if all pulls succeeded, False if any failed.
@@ -59,7 +64,7 @@ def pull_all_images(services: list[dict]) -> bool:
         image_repo = svc.get("image_repo", "")
         image_digest = svc.get("image_digest", "")
         image_ref = f"{image_repo}@{image_digest}"
-        if not pull_image(image_ref):
+        if not pull_image(image_ref, dry_run=dry_run):
             all_ok = False
             logger.error("Image pull failed for service %s", svc.get("service_name", "unknown"))
     return all_ok

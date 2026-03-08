@@ -51,18 +51,19 @@ class RollbackManager:
             else:
                 logger.warning("No backup file to restore for service %s at %s", name, src)
 
-    def perform_rollback(self, service_names: list[str]) -> bool:
+    def perform_rollback(self, service_names: list[str], dry_run: bool = False) -> bool:
         """Restore .env backups and restart all services.
 
         Args:
             service_names: List of service names to roll back.
+            dry_run: If True, skip actual service restarts.
 
         Returns:
             True if restore and restart all succeeded, False otherwise.
         """
         logger.info("Performing rollback for services: %s", service_names)
         self.restore_env_files(service_names)
-        ok = restart_all_services(service_names)
+        ok = restart_all_services(service_names, dry_run=dry_run)
         if ok:
             logger.info("Rollback completed successfully")
         else:

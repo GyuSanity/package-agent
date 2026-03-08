@@ -87,13 +87,17 @@ class ApiClient:
                 params={"device_name": self.device_name},
                 timeout=DEFAULT_TIMEOUT,
             )
-            if resp.status_code == 404:
+            if resp.status_code in (204, 404):
                 logger.debug("No desired release found")
                 return None
             resp.raise_for_status()
             data = resp.json()
-            logger.info("Desired release received: id=%s", data.get("id"))
-            return data
+            # Control plane wraps response in {"release": {...}}, unwrap it
+            release = data.get("release", data)
+            if release is None:
+                return None
+            logger.info("Desired release received: id=%s", release.get("id"))
+            return release
         except requests.RequestException as exc:
             logger.warning("Failed to get desired release: %s", exc)
             return None

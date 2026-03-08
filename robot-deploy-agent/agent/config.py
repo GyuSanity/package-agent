@@ -22,6 +22,8 @@ class Config:
     service_config_dir: str = "/etc/container-runner"
     state_file: str = "/var/lib/robot-deploy-agent/state.json"
     log_level: str = "INFO"
+    dry_run: bool = False
+    single_cycle: bool = False
 
 
 def load_config(path: str | None = None) -> Config:
@@ -55,6 +57,8 @@ def load_config(path: str | None = None) -> Config:
         service_config_dir=raw.get("service_config_dir", Config.service_config_dir),
         state_file=raw.get("state_file", Config.state_file),
         log_level=raw.get("log_level", Config.log_level),
+        dry_run=bool(raw.get("dry_run", Config.dry_run)),
+        single_cycle=bool(raw.get("single_cycle", Config.single_cycle)),
     )
 
     logger.info("Config loaded: device_name=%s, control_plane_url=%s", config.device_name, config.control_plane_url)
