@@ -1,0 +1,50 @@
+# container-runner: Robot Model to Docker Image/Service Mapping
+# This file defines which Docker images and services each robot model requires.
+# CI/CD pipelines automatically update image tags and digests via repository_dispatch.
+
+bart_registry: "samsung-humanoid-docker-remote.bart.sec.samsung.net"
+
+# Default image versions (applied to all models unless overridden)
+images:
+  rise:
+    tag: "latest"
+    digest: "sha256:1722a215bdf3ab45afc1549b8a050dfac666e51680e8f8b6a248054593c86f89"
+  rise-dashboard:
+    tag: "latest"
+    digest: "sha256:4a5187424f6db8d85175033310d8b6bf6dbe0ed60ec54c763c0677abfc9c1162"
+  # To add a new service image (e.g. whole-body-controller):
+  # whole-body-controller:
+  #   tag: "1.0.0"
+  #   digest: "sha256:fedcba0987654321"
+
+# Robot model configurations
+# Each model lists the services it requires.
+# Optional `image_overrides` can override default image tag/digest per model.
+models:
+  extreme:
+    services: [rise, rise-dashboard]
+  extreme2:
+    services: [rise, rise-dashboard]
+  extreme3:
+    services: [rise, rise-dashboard]
+  friendly:
+    services: [rise, rise-dashboard]
+  human:
+    services: [rise, rise-dashboard]
+  human2:
+    services: [rise, rise-dashboard]
+  human3:
+    services: [rise, rise-dashboard]
+  power2:
+    services: [rise, rise-dashboard]
+  power3:
+    services: [rise, rise-dashboard]
+    # Example: per-model image override (optional)
+    # image_overrides:
+    #   rise:
+    #     tag: "1.2.0"
+    #     digest: "sha256:override123"
+
+  # Example: adding whole-body-controller to a model (when available)
+  # humanoid-power1p2:
+  #   services: [rise, rise-dashboard, whole-body-controller]

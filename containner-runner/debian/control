@@ -1,0 +1,23 @@
+Source: container-runner
+Section: admin
+Priority: optional
+Maintainer: SamsungHumanoid Deployment Solution <deployment-solution@samsung.com>
+Build-Depends: debhelper (>= 12)
+Standards-Version: 4.5.0
+Homepage: https://github.com/SamsungHumanoid/container-runner
+Package: container-runner
+Architecture: all
+Depends: docker-ce (>= 20.10) | docker.io (>= 20.10),
+         docker-compose-plugin (>= 2.0) | docker-compose (>= 2.0),
+         python3 (>= 3.8),
+         python3-yaml,
+         systemd
+Description: Container Runner for Samsung Humanoid Robots
+ Manages Docker containers for robot services (rise, rise-dashboard,
+ whole-body-controller) based on the ROBOT_MODEL configured on each robot.
+ .
+ Features:
+  - Automatic service selection based on ROBOT_MODEL
+  - Docker image pulling from BART registry
+  - Systemd service management via Docker Compose
+  - Per-model image version overrides

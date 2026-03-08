@@ -1,0 +1,90 @@
+name: "Release Docker Image"
+description: "Build and push Docker image to Bart repository"
+author: "Samsung Humanoid"
+
+inputs:
+  bart_repo:
+    description: "Bart repository URL"
+    required: true
+  github_srbot_password:
+    description: "Srbot github Token"
+    required: true
+  bart_srbot_password:
+    description: "Srbot bart Token"
+    required: true
+  docker_tag:
+    description: "Docker tag to use"
+    required: true
+  container_runner_repo:
+    description: "Container runner repository"
+    required: false
+    default: "SamsungHumanoid/container-runner"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Clean work directory
+      shell: bash
+      run: |
+        sudo find ${{ github.workspace }}/. -name . -o -prune -exec rm -rf -- {} + || true
+
+    - name: Checkout
+      uses: CODE-Actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: CODE-Actions/docker-metadata-action@v4
+      with:
+        images: ${{ inputs.bart_repo }}/${{ github.event.repository.name }}
+        tags: |
+          type=raw,value=${{ inputs.docker_tag != '' && inputs.docker_tag || github.ref_name }}
+
+    - name: Login to Bart
+      uses: CODE-Actions/docker-login-action@v2
+      with:
+        registry: ${{ inputs.bart_repo }}
+        username: ${{ 'srbot' }}
+        password: ${{ inputs.bart_srbot_password }}
+
+    - name: Set up Docker Buildx
+      uses: CODE-Actions/docker-setup-buildx-action@v3
+
+    - name: Build and push
+      id: push
+      uses: CODE-Actions/docker-build-push-action@v5
+      with:
+        context: .
+        file: docker/Dockerfile
+        push: true
+        tags: |
+          ${{ steps.meta.outputs.tags }}
+
+    - name: Notify container-runner to update digest
+      if: success()
+      shell: bash
+      run: |
+        IMAGE="${{ github.event.repository.name }}"
+        TAG="${{ inputs.docker_tag != '' && inputs.docker_tag || github.ref_name }}"
+        DIGEST="${{ steps.push.outputs.digest }}"
+
+        if [ -z "$DIGEST" ]; then
+          echo "WARNING: No digest returned. Skipping dispatch."
+          exit 0
+        fi
+
+        echo "Dispatching: image=${IMAGE}, tag=${TAG}, digest=${DIGEST}"
+
+        curl -f -X POST \
+          -H "Authorization: token ${{ inputs.github_srbot_password }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://github.sec.samsung.net/api/v3/repos/${{ inputs.container_runner_repo }}/dispatches" \
+          -d "{
+            \"event_type\": \"update-image-digest\",
+            \"client_payload\": {
+              \"image\": \"${IMAGE}\",
+              \"tag\": \"${TAG}\",
+              \"digest\": \"${DIGEST}\"
+            }
+          }"

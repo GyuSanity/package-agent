@@ -1,0 +1,15 @@
+[Unit]
+Description=Robot Deploy Agent
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m agent.main
+WorkingDirectory=/opt/robot-deploy-agent
+Environment=AGENT_CONFIG_PATH=/etc/robot-deploy-agent/agent.yaml
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

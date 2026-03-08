@@ -1,0 +1,65 @@
+#!/bin/bash
+# Post-installation script for container-runner
+# This script is executed after the package files are installed.
+
+set -e
+
+# Handle configuration file updates
+handle_config_update() {
+    local config_file="/etc/container-runner/models.yaml"
+    local new_config_file="${config_file}.dpkg-new"
+    
+    # Check if there's a new configuration file
+    if [ -f "$new_config_file" ]; then
+        echo "[container-runner] New configuration file detected..."
+        
+        # If there's no existing config file, just move the new one
+        if [ ! -f "$config_file" ]; then
+            echo "[container-runner] Installing new configuration file..."
+            mv "$new_config_file" "$config_file"
+            return
+        fi
+        
+        # Compare the files
+        if cmp -s "$config_file" "$new_config_file"; then
+            # Files are identical, just remove the .dpkg-new file
+            echo "[container-runner] Configuration file unchanged, removing temporary file..."
+            rm -f "$new_config_file"
+        else
+            # Files are different, update the configuration
+            echo "[container-runner] Updating configuration file with new models..."
+            # Backup the current configuration
+            cp "$config_file" "${config_file}.backup"
+            echo "[container-runner] Previous configuration backed up to ${config_file}.backup"
+            # Replace with the new configuration
+            mv "$new_config_file" "$config_file"
+        fi
+    fi
+}
+
+case "$1" in
+    configure)
+        echo "[container-runner] Running post-installation setup..."
+        
+        # Handle configuration file updates
+        handle_config_update
+
+        # Run the main setup script
+        if [ -x /usr/lib/container-runner/setup.sh ]; then
+            /usr/lib/container-runner/setup.sh
+        else
+            echo "[container-runner] ERROR: setup.sh not found or not executable" >&2
+            exit 1
+        fi
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

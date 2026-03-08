@@ -1,0 +1,34 @@
+# Rise Dashboard service compose fragment
+# Merged into the final docker-compose.yml when the robot model requires 'rise-dashboard'.
+# Shares the same container configuration as rise (image only differs).
+
+services:
+  rise-dashboard-container:
+    image: "${RISE_DASHBOARD_IMAGE}"
+    container_name: rise-dashboard-container
+    shm_size: 15g
+    volumes:
+      - /dev:/dev:rw
+      - /dev/shm:/dev/shm:rw
+      - /etc/rise:/etc/rise:rw
+      - /var/lib/rise:/var/lib/rise:rw
+      - /etc/environment:/etc/environment:ro
+      - /etc/iceoryx:/etc/iceoryx:rw
+      - /etc/security/limits.d:/etc/security/limits.d:ro
+      - /app/external/iceoryx-examples/iceoryx_examples/icedelivery/build:/iceoryx-build:rw
+      - /tmp:/tmp:rw
+      - /share:/share:rw
+      - /run:/run:rw
+      - /run/lock:/run/lock:rw
+      - ${HOME}/logs:/home/rbq/logs:rw
+      - ${HOME}/test-app-res:/home/rbq/test-app-res:rw
+    environment:
+      - PYTHON_VENV_PATH=/opt/rise-venv
+      - PYTHONPATH=/opt/rise-venv/lib/python3.10/site-packages
+      - ROBOT_MODEL=${ROBOT_MODEL}
+    privileged: true
+    pid: host
+    network_mode: host
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped

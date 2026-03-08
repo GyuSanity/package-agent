@@ -1,0 +1,62 @@
+#!/bin/bash
+# Post-removal script for container-runner
+# This script is executed after the package files are removed.
+
+set -e
+
+UNIT_SUFFIX="-container"
+SYSTEMD_DIR="/lib/systemd/system"
+CONFIG_DIR="/etc/container-runner"
+
+case "$1" in
+    purge)
+        echo "[container-runner] Purging configuration and data..."
+
+        # Remove dynamically generated systemd unit files
+        for unit_file in "${SYSTEMD_DIR}"/*${UNIT_SUFFIX}.service; do
+            [ -f "${unit_file}" ] || continue
+            echo "[container-runner] Removing ${unit_file}..."
+            rm -f "${unit_file}"
+        done
+
+        # Remove Docker images from per-service .env files
+        if command -v docker &>/dev/null; then
+            for env_file in "${CONFIG_DIR}"/*/.env; do
+                [ -f "${env_file}" ] || continue
+                echo "[container-runner] Removing Docker images from ${env_file}..."
+                while IFS='=' read -r key value; do
+                    case "$key" in
+                        *_IMAGE)
+                            docker rmi "$value" 2>/dev/null || true
+                            ;;
+                    esac
+                done < "${env_file}" 2>/dev/null || true
+            done
+        fi
+
+        # Remove per-service config directories
+        for service_dir in "${CONFIG_DIR}"/*/; do
+            [ -d "${service_dir}" ] || continue
+            echo "[container-runner] Removing ${service_dir}..."
+            rm -rf "${service_dir}"
+        done
+
+        # Remove config directory if empty
+        rmdir "${CONFIG_DIR}" 2>/dev/null || true
+
+        # Reload systemd
+        systemctl daemon-reload 2>/dev/null || true
+        ;;
+
+    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        # Reload systemd after unit file removal
+        systemctl daemon-reload 2>/dev/null || true
+        ;;
+
+    *)
+        echo "postrm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

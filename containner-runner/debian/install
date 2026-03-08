@@ -1,0 +1,6 @@
+config/models.yaml etc/container-runner/
+compose/rise.yml usr/lib/container-runner/compose/
+compose/rise-dashboard.yml usr/lib/container-runner/compose/
+scripts/generate_config.py usr/lib/container-runner/
+scripts/setup.sh usr/lib/container-runner/
+scripts/teardown.sh usr/lib/container-runner/

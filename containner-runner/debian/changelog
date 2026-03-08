@@ -1,0 +1,9 @@
+container-runner (0.1.0) stable; urgency=medium
+
+  * Initial release
+  * Robot model based Docker image mapping
+  * Docker Compose integration with systemd
+  * Support for rise, rise-dashboard, whole-body-controller services
+  * Per-model image override support
+
+ -- SamsungHumanoid Deployment Solution <deployment-solution@samsung.com>  Mon, 10 Feb 2026 00:00:00 +0900

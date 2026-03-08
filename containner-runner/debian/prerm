@@ -1,0 +1,26 @@
+#!/bin/bash
+# Pre-removal script for container-runner
+# This script is executed before the package files are removed.
+
+set -e
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        echo "[container-runner] Running pre-removal teardown..."
+
+        # Run the teardown script
+        if [ -x /usr/lib/container-runner/teardown.sh ]; then
+            /usr/lib/container-runner/teardown.sh
+        fi
+        ;;
+
+    failed-upgrade)
+        ;;
+
+    *)
+        echo "prerm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

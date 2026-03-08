@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# No build step needed
+
+override_dh_auto_install:
+	# Install configuration files
+	install -d $(CURDIR)/debian/container-runner/etc/container-runner
+	install -m 644 config/models.yaml $(CURDIR)/debian/container-runner/etc/container-runner/
+
+	# Install compose fragments
+	install -d $(CURDIR)/debian/container-runner/usr/lib/container-runner/compose
+	install -m 644 compose/rise.yml $(CURDIR)/debian/container-runner/usr/lib/container-runner/compose/
+	install -m 644 compose/rise-dashboard.yml $(CURDIR)/debian/container-runner/usr/lib/container-runner/compose/
+
+	# Install scripts
+	install -d $(CURDIR)/debian/container-runner/usr/lib/container-runner
+	install -m 755 scripts/generate_config.py $(CURDIR)/debian/container-runner/usr/lib/container-runner/
+	install -m 755 scripts/setup.sh $(CURDIR)/debian/container-runner/usr/lib/container-runner/
+	install -m 755 scripts/teardown.sh $(CURDIR)/debian/container-runner/usr/lib/container-runner/
+	install -m 755 scripts/container_setup.sh $(CURDIR)/debian/container-runner/usr/lib/container-runner/
+
+	# Note: systemd unit files are dynamically generated at install time
+	# by generate_config.py based on ROBOT_MODEL

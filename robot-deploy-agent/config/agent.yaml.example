@@ -1,0 +1,31 @@
+# Robot Deploy Agent Configuration
+#
+# Copy this file to /etc/robot-deploy-agent/agent.yaml and edit as needed.
+
+# URL of the control plane server
+control_plane_url: "http://localhost:8000"
+
+# Unique device identifier registered with the control plane
+device_name: "robot-001"
+
+# Robot model identifier
+robot_model: "extreme"
+
+# Authentication key for this device (shared secret)
+auth_key: "device-secret-key"
+
+# How often (in seconds) to poll for new desired releases
+polling_interval_sec: 30
+
+# How often (in seconds) to send heartbeats to the control plane
+heartbeat_interval_sec: 60
+
+# Directory containing per-service .env files used by container-runner
+# Each service has a subdirectory: <service_config_dir>/<service_name>/.env
+service_config_dir: "/etc/container-runner"
+
+# Path to the local state JSON file for persistence across restarts
+state_file: "/var/lib/robot-deploy-agent/state.json"
+
+# Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_level: "INFO"
